@@ -7,7 +7,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// TODO: Comprobar la conexión a la base de datos de redis
 func Init() *redis.Client {
 	ctx := context.Background()
 	// Initialize database connection

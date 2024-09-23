@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -19,9 +20,24 @@ import (
 
 var portNumber = flag.Int("port", 8080, "Port to listen on")
 var originServer = flag.String("origin", "", "Origin server to proxy requests to")
+var deleteCache = flag.Bool("clear-cache", false, "Delete cache")
 
 func main() {
 	flag.Parse()
+	//Init redis database
+	db := database.Init()
+	defer db.Close()
+
+	// Delete cache
+	if *deleteCache {
+		ctx := context.Background()
+		if err := db.FlushAll(ctx).Err(); err != nil {
+			slog.Error("Error deleting cache", "error", err.Error())
+		} else {
+			slog.Info("Cache deleted")
+		}
+	}
+
 	fmt.Println("Starting proxy server...", *portNumber, *originServer)
 
 	if *originServer == "" {
@@ -31,9 +47,6 @@ func main() {
 	if !utils.IsUrl(*originServer) {
 		panic("Invalid origin server")
 	}
-
-	db := database.Init()
-	defer db.Close()
 
 	proxy := &proxyCache{
 		transport: http.DefaultTransport,
@@ -50,6 +63,7 @@ type proxyCache struct {
 	cache     *redis.Client
 }
 
+// TODO: Make integrations test for this proxy
 func (p *proxyCache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	path := r.URL.Path

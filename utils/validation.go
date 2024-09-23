@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// TODO: Make unit tests for this function
 func IsUrl(str string) bool {
 	url, err := url.ParseRequestURI(str)
 	if err != nil {
