@@ -66,9 +66,8 @@ func (p *proxyCache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	strResponseCache, err := p.cache.Get(ctx, path).Result()
 
 	if err != nil || strResponseCache == "" {
-		slog.Info("No cache")
+		slog.Info("No cache", slog.String("path", path))
 	} else {
-		fmt.Println("Cache", string(strResponseCache))
 		w.Header().Add("X-Cache", "HIT")
 		rBody := bufio.NewReader(bytes.NewReader([]byte(strResponseCache)))
 		responseBody, err := http.ReadResponse(rBody, nil)
@@ -111,8 +110,8 @@ func (p *proxyCache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	CopyHeaders(resp.Header, w.Header())
 
 	// Set the status code of the original response to the status code of the proxy response
-	w.WriteHeader(resp.StatusCode)
 	w.Header().Add("X-Cache", "MISS")
+	w.WriteHeader(resp.StatusCode)
 
 	// Copy the body of the proxy response to the original response
 	io.Copy(w, resp.Body)
