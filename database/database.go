@@ -1,20 +1,29 @@
 package database
 
 import (
+	"context"
+	"log/slog"
+
 	"github.com/redis/go-redis/v9"
 )
 
-var rdb *redis.Client
-
-func Init() {
+// TODO: Comprobar la conexión a la base de datos de redis
+func Init() *redis.Client {
+	ctx := context.Background()
 	// Initialize database connection
-	rdb = redis.NewClient(&redis.Options{
+	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
-}
 
-func GetClient() *redis.Client {
+	_, err := rdb.Ping(ctx).Result()
+
+	if err != nil {
+		panic(err)
+	}
+
+	slog.Info("Connected to Redis")
+
 	return rdb
 }
